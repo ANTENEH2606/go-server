@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-pg/pg/v10"
 	"github.com/joho/godotenv"
 )
@@ -104,7 +104,8 @@ func albumsHandler(w http.ResponseWriter, r *http.Request) {
 
 func albumByIDHandler(w http.ResponseWriter, r *http.Request) {
 	// Trim "/albums/" from URL path for ID
-	id := strings.TrimPrefix(r.URL.Path, "/albums/")
+	//id := strings.TrimPrefix(r.URL.Path, "/albums/")
+	id := chi.URLParam(r, "id") //Using Chi's chi.URLParam(r, "paramName") to extract URL parameters instead of manually trimming strings
 	if id == "" {
 		sendError(w, "Invalid album ID", http.StatusBadRequest)
 		return
@@ -205,11 +206,23 @@ func main() {
 	connectDB()
 	defer db.Close()
 
-	http.HandleFunc("/albums", albumsHandler)
-	http.HandleFunc("/albums/", albumByIDHandler)
+	//http.HandleFunc("/albums", albumsHandler)
+	//http.HandleFunc("/albums/", albumByIDHandler)
+
+	r := chi.NewRouter()
+
+	r.Route("/albums", func(r chi.Router) {
+		r.Get("/", getAlbums)  //Get /albums
+		r.Post("/", postAlbum) // post /albums
+
+		r.Route("/{id}", func(r chi.Router) {
+			r.Get("/", albumByIDHandler)    // GET /albums/{id}
+			r.Delete("/", albumByIDHandler) // DELETE /albums/{id}
+		})
+	})
 
 	log.Println("Server running on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", r); err != nil { // in parentessis instade of using nil we use r
 		log.Fatalf("Server failed: %v", err)
 	}
 }

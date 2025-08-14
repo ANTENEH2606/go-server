@@ -3,6 +3,7 @@ module web-service
 go 1.24.5
 
 require (
+	github.com/go-chi/chi/v5 v5.2.2 // indirect
 	github.com/go-pg/pg v8.0.7+incompatible // indirect
 	github.com/go-pg/pg/v10 v10.14.0 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect
